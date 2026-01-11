@@ -38,7 +38,7 @@ export default function Footer() {
               Md Sydur Rahaman
             </a>
           </p>
-          <p className="text-muted-foreground/60 text-xs text-center font-mono">Built with Next.js & Tailwind CSS</p>
+          <p className="text-muted-foreground/60 text-xs text-center font-mono">Built By Sydur Rahaman </p>
         </div>
       </div>
     </footer>

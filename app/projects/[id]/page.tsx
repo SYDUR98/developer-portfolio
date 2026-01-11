@@ -4,18 +4,39 @@ import Link from "next/link"
 import { ArrowLeft, ExternalLink, Github } from "lucide-react"
 import { projects } from "@/components/projects-section"
 
-export function generateStaticParams() {
+/**
+ * generateStaticParams is used to generate routes at build time.
+ * The error "map is not a function" occurs here if 'projects' is undefined 
+ * or not an array during the build process.
+ */
+export async function generateStaticParams() {
+  // Safety Check: Ensure projects exists and is an array before mapping
+  if (!projects || !Array.isArray(projects)) {
+    console.warn("Build Warning: Projects data is missing or not an array.");
+    return [];
+  }
+
   return projects.map((project) => ({
-    id: project.id,
-  }))
+    id: project.id.toString(), // Next.js expects the ID to be a string
+  }));
 }
 
-export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const project = projects.find((p) => p.id === id)
+// Defining the Props type for Next.js 15/16 standards
+interface ProjectPageProps {
+  params: Promise<{ id: string }>;
+}
 
+export default async function ProjectPage({ params }: ProjectPageProps) {
+  // In Next.js 15+, params is a Promise that must be awaited
+  const { id } = await params;
+  
+  // Find the specific project by ID
+  // Using String(p.id) to ensure comparison works regardless of data type
+  const project = projects.find((p) => String(p.id) === id);
+
+  // If project doesn't exist, trigger the 404 page
   if (!project) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -68,12 +89,17 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
         {/* Project Image */}
         <div className="relative aspect-video rounded-xl overflow-hidden border border-border mb-12">
-          <Image src={project.image || "/placeholder.svg"} alt={project.title} fill className="object-cover" priority />
+          <Image 
+            src={project.image || "/placeholder.svg"} 
+            alt={project.title} 
+            fill 
+            className="object-cover" 
+            priority 
+          />
         </div>
 
         {/* Project Details */}
         <div className="space-y-10">
-          {/* Description */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-primary" />
@@ -82,7 +108,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             <p className="text-muted-foreground leading-relaxed">{project.description}</p>
           </div>
 
-          {/* Tech Stack */}
+          {/* Tech Stack Rendering */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-primary" />
@@ -100,7 +126,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
 
-          {/* Challenges */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-primary" />
@@ -109,7 +134,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             <p className="text-muted-foreground leading-relaxed">{project.challenges}</p>
           </div>
 
-          {/* Future Improvements */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-primary" />
@@ -119,7 +143,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Bottom Navigation */}
         <div className="mt-16 pt-8 border-t border-border/50">
           <Link
             href="/#projects"
