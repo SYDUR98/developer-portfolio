@@ -2,39 +2,39 @@ import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ExternalLink, Github } from "lucide-react"
-import { projects } from "@/components/projects-section"
+// CORRECT IMPORT: Pointing to your new data file
+import { projects } from "../../../data/projects"
 
 /**
- * generateStaticParams is used to generate routes at build time.
- * The error "map is not a function" occurs here if 'projects' is undefined 
- * or not an array during the build process.
+ * generateStaticParams creates routes at build time.
  */
 export async function generateStaticParams() {
-  // Safety Check: Ensure projects exists and is an array before mapping
+  // Defensive check to prevent build crash
   if (!projects || !Array.isArray(projects)) {
-    console.warn("Build Warning: Projects data is missing or not an array.");
     return [];
   }
 
   return projects.map((project) => ({
-    id: project.id.toString(), // Next.js expects the ID to be a string
+    id: project.id,
   }));
 }
 
-// Defining the Props type for Next.js 15/16 standards
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  // In Next.js 15+, params is a Promise that must be awaited
+  // Await params for Next.js 15+ compatibility
   const { id } = await params;
   
-  // Find the specific project by ID
-  // Using String(p.id) to ensure comparison works regardless of data type
+  // Basic validation to ensure projects is available
+  if (!projects) {
+    notFound();
+  }
+
+  // Find project by matching the ID
   const project = projects.find((p) => String(p.id) === id);
 
-  // If project doesn't exist, trigger the 404 page
   if (!project) {
     notFound();
   }
@@ -42,7 +42,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   return (
     <main className="min-h-screen bg-background gradient-radial">
       <div className="container mx-auto px-6 lg:px-12 pt-28 pb-16 max-w-4xl">
-        {/* Back Button */}
+        {/* Navigation */}
         <Link
           href="/#projects"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-10 group"
@@ -51,7 +51,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           <span className="text-sm font-medium">Back to Projects</span>
         </Link>
 
-        {/* Project Header */}
+        {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">{project.title}</h1>
           <div className="flex flex-wrap gap-3">
@@ -87,7 +87,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
         </div>
 
-        {/* Project Image */}
+        {/* Project Image Display */}
         <div className="relative aspect-video rounded-xl overflow-hidden border border-border mb-12">
           <Image 
             src={project.image || "/placeholder.svg"} 
@@ -98,7 +98,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           />
         </div>
 
-        {/* Project Details */}
+        {/* Content Section */}
         <div className="space-y-10">
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
@@ -108,7 +108,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             <p className="text-muted-foreground leading-relaxed">{project.description}</p>
           </div>
 
-          {/* Tech Stack Rendering */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-primary" />
@@ -118,7 +117,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               {project.tech.map((tech) => (
                 <span
                   key={tech}
-                  className="px-4 py-2 glass-card rounded-lg text-sm font-mono text-muted-foreground hover:text-primary transition-colors"
+                  className="px-4 py-2 bg-secondary/30 border border-border rounded-lg text-sm font-mono text-muted-foreground hover:text-primary transition-colors"
                 >
                   {tech}
                 </span>
@@ -143,7 +142,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
         </div>
 
-        {/* Bottom Navigation */}
+        {/* Footer Navigation */}
         <div className="mt-16 pt-8 border-t border-border/50">
           <Link
             href="/#projects"
